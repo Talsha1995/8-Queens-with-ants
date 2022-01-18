@@ -8,7 +8,7 @@ from ACO.running_sets import DEBUG
 
 
 class NQueensACO:
-    def __init__(self, n, Nant, Niter, rho, init_pheromone, max_pheromone, good_path_factor, seed=None,
+    def __init__(self, n, Nant, Niter, rho, init_pheromone, max_pheromone, seed=None,
                  ):
         self.n = n
         self.Nant = Nant
@@ -17,7 +17,6 @@ class NQueensACO:
         self.graph = Graph(n)
         self.pheromones = PheromonesData(self.graph.edges_lst, n, init_pheromone, max_pheromone)
         self.local_state = np.random.RandomState(seed)
-        self.good_path_factor = good_path_factor
 
     def run(self):
         """
@@ -30,7 +29,7 @@ class NQueensACO:
         perfect_paths = []
         for _ in tqdm(range(self.Niter)):
             all_paths = self.constructColonyPaths()
-            non_penalty_paths = self.pheromones.update_pheromones_and_get_results(all_paths, self.good_path_factor)
+            non_penalty_paths = self.pheromones.update_pheromones_and_get_results(all_paths)
             for path in non_penalty_paths:
                 if path not in perfect_paths:
                     perfect_paths.append(path)
@@ -86,10 +85,4 @@ class NQueensACO:
         if DEBUG:
             print(f"chosen: {move}")
         return move
-
-
-if __name__ == '__main__':
-    aco = NQueensACO(13, 200, 200, 0.95, good_path_factor=1.05, init_pheromone=1, max_pheromone=15)
-    results = aco.run()
-    print(results)
 

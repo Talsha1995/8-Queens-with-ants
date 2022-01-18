@@ -10,10 +10,9 @@ class PheromonesData:
         self.init_phero = initial_pheromone
         self.max_phero = max_pheromone
 
-    def update_pheromones_and_get_results(self, lst_of_paths, factor=1.05):
+    def update_pheromones_and_get_results(self, lst_of_paths):
         """
         :param lst_of_paths: all paths found, each path is list of Edges
-        :param factor: pheromone bonus for good paths
         :return: paths that made no penalties
         """
         perfect_paths = []
@@ -25,8 +24,6 @@ class PheromonesData:
                 self.edge_to_phero[edge] += 1/2-1/(score**2)
             if score == self.n - 1:
                 perfect_paths.append(path)
-            # elif score == self.n - 2 or score == self.n-3:
-            #     print(f"Found path of length {score}")
         return perfect_paths
 
     def __get_path_to_score_list(self, lst_of_paths):
@@ -100,7 +97,8 @@ class PheromonesData:
     def get_normalized_edge_to_phero_by_column(self):
         edge_to_phero = dict()
         for i in range(self.n):
-            edge_to_phero.update(self.get_edges_with_probabilities_from_given_column(i))
+            for j in range(self.n):
+                edge_to_phero.update(self.get_edges_with_probabilities_from_given_column(i, j))
         return edge_to_phero
 
     def make_evaporation(self, rho):
