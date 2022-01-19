@@ -21,7 +21,7 @@ class PheromonesData:
         best_size = len(path_score_tuples)//4
         for path, score in path_score_tuples[:best_size]:
             for edge in path:
-                self.edge_to_phero[edge] += 1/2-1/(score**2)
+                self.edge_to_phero[edge] = min(self.edge_to_phero[edge] + 1/2-1/(score**2), self.max_phero)
             if score == self.n - 1:
                 perfect_paths.append(path)
         return perfect_paths
