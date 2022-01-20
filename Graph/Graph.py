@@ -1,5 +1,5 @@
-from ACO.Graph.Edge import Edge
-from ACO.Graph.Vertex import Vertex
+from Graph.Edge import Edge
+from Graph.Vertex import Vertex
 
 
 class Graph:

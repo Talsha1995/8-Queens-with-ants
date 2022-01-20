@@ -1,14 +1,16 @@
-from ACO.Graph.Edge import Edge
-from ACO.Graph.Vertex import Vertex
-from ACO.running_sets import DEBUG
+from Graph.Edge import Edge
+from Graph.Vertex import Vertex
+from running_sets import DEBUG
 
 class PheromonesData:
-    def __init__(self, edges, n, initial_pheromone=1, max_pheromone=25):
+    def __init__(self, edges, n, alpha, beta, initial_pheromone=1, max_pheromone=25):
         self.edges = edges
         self.edge_to_phero = {edge: initial_pheromone for edge in edges}
         self.n = n
         self.init_phero = initial_pheromone
         self.max_phero = max_pheromone
+        self.alpha = alpha
+        self.beta = beta
 
     def update_pheromones_and_get_results(self, lst_of_paths):
         """
@@ -71,7 +73,7 @@ class PheromonesData:
             return 2
         return 0
 
-    def get_edges_with_probabilities_from_given_column(self, source_col_index, source_row_index=None):
+    def get_edges_with_probabilities_from_given_column(self, threats, source_col_index, source_row_index=None):
         """
         returning dict of {.., edge: probability, ...} for all edges from given vertex indexes.
         if source_row_index not given, it will take all vertices from source_col_index.
@@ -84,8 +86,10 @@ class PheromonesData:
         for edge, phero in self.edge_to_phero.items():
             if source_row_index is not None:
                 if edge.source.row == source_row_index and edge.source.col == source_col_index:
-                    edges[edge] = phero
-                    sum_of_phero += phero
+                    edge_p = phero ** self.alpha + (1/threats[edge.dest.row][edge.dest.col]) ** self.beta
+                    edges[edge] = edge_p
+                    sum_of_phero += edge_p
+
             elif edge.source.col == source_col_index:
                 edges[edge] = phero
                 sum_of_phero += phero

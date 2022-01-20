@@ -1,21 +1,21 @@
 import numpy as np
 
-from ACO.Graph.Edge import Edge
-from ACO.Graph.Graph import Graph
-from ACO.Graph.PheromonesData import PheromonesData
+from Graph.Edge import Edge
+from Graph.Graph import Graph
+from Graph.PheromonesData import PheromonesData
 from tqdm import tqdm
-from ACO.running_sets import DEBUG
+from running_sets import DEBUG
 
 
 class NQueensACO:
-    def __init__(self, n, Nant, Niter, rho, init_pheromone, max_pheromone, seed=None,
+    def __init__(self, n, Nant, Niter, rho, init_pheromone, max_pheromone, seed=None, alpha=1, beta=1.5
                  ):
         self.n = n
         self.Nant = Nant
         self.Niter = Niter
         self.rho = rho
         self.graph = Graph(n)
-        self.pheromones = PheromonesData(self.graph.edges_lst, n, init_pheromone, max_pheromone)
+        self.pheromones = PheromonesData(self.graph.edges_lst, n, alpha, beta, init_pheromone, max_pheromone)
         self.local_state = np.random.RandomState(seed)
 
     def run(self):
@@ -46,11 +46,12 @@ class NQueensACO:
         The output, 'path', is a list of edges, each represented by a pair of nodes.
         """
         path = []
+        threats = np.ones((self.n, self.n))
         prev_row = None
         if DEBUG:
             print("---------------------------------------")
         for col in range(self.n - 1):
-            move = self.nextMove(prev_row, col)
+            move = self.nextMove(prev_row, col, threats)
             path.append(move)
             prev_row = move.dest.row
         if DEBUG:
@@ -63,7 +64,19 @@ class NQueensACO:
         """
         return [self.constructSolution() for _ in range(self.Nant)]
 
-    def nextMove(self, source_row_index, source_col_index) -> Edge:
+    def updatedThreats(self, row, column, threats):
+        """
+        this method update threats on board (on the next columns -->.. ) that the new queen, that placed in (row, col)
+        is threat on.
+        """
+        for j in range(1, self.n - column):
+            threats[row][column + j] += 1  # update row
+            if row + j < self.n:  # update upper diagonal
+                threats[row + j][column + j] += 1
+            if row - j < self.n and row - j >= 0:  # update lower diagonal
+                threats[row - j][column + j] += 1
+
+    def nextMove(self, source_row_index, source_col_index, threats) -> Edge:
         """
         This method probabilistically calculates the next move (node) given a neighboring
         information per a single ant at a specified node.
@@ -72,7 +85,7 @@ class NQueensACO:
         'visited' is a set of nodes - whose probability weights are constructed as zeros, to eliminate revisits.
         The random generation relies on norm_row, as a vector of probabilities, using the numpy function 'choice'
         """
-        edge_to_p = self.pheromones.get_edges_with_probabilities_from_given_column(source_col_index, source_row_index)
+        edge_to_p = self.pheromones.get_edges_with_probabilities_from_given_column(threats, source_col_index, source_row_index)
         if DEBUG:
             for edge, p in edge_to_p.items():
                 print(f"{edge}: {p}")
@@ -81,7 +94,13 @@ class NQueensACO:
         for edge, prob in edge_to_p.items():
             edges.append(edge)
             probabilities.append(prob)
+        # print(f"---------------{source_col_index + 1}")
+        # print(probabilities)
+        # print()
         move = self.local_state.choice(edges, 1, p=probabilities)[0]
+        if source_col_index == 0: #case of fisrt move so we need to update threate of 2 queens
+            self.updatedThreats(move.source.row, 0, threats)
+        self.updatedThreats(move.dest.row, move.dest.col, threats)
         if DEBUG:
             print(f"chosen: {move}")
         return move

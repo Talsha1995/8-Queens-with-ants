@@ -3,8 +3,8 @@ import os
 import numpy as np
 from NQueensACO import NQueensACO as ACO
 
-from ACO.ResultsSaver import ResultsSaver
-from ACO.running_sets import *
+from ResultsSaver import ResultsSaver
+from running_sets import *
 
 
 class ACO_Runner:

@@ -1,4 +1,4 @@
-from ACO.Graph.Vertex import Vertex
+from Graph.Vertex import Vertex
 
 
 class Edge:

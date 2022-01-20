@@ -2,9 +2,9 @@
 
 Nant = 200
 Niter = 1000
-EVAPORATION_FACTOR = 0.9
+EVAPORATION_FACTOR = 0.85
 INIT_PHERO = 1
-MAX_PHERO = 60
+MAX_PHERO = 100
 
 ITERATIONS = 1
 SAVE_TO_FILES = True
@@ -22,9 +22,9 @@ N8 = {
 
 N10 = {
     "n": 10,
-    "Nant": Nant,
+    "Nant": 50,
     "Niter": Niter,
-    "rho": 0.9,
+    "rho": 0.85,
     "init_pheromone": INIT_PHERO,
     "max_pheromone": MAX_PHERO,
     "seed": None,
@@ -113,11 +113,11 @@ N64 = {
 
 running_sets = [
     # N8,
-    # N10,
+    N10,
     # N12,
     # N12_2,
     # N13,
-    N15,
+    # N15,
     # N16,
     # N16_2,
     # N32,
