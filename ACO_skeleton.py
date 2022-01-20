@@ -6,6 +6,7 @@ Updated on Tue Jan 7 20:30:01 2020
 Based on code by <github/Akavall>
 """
 import numpy as np
+
 """
 A class for defining an Ant Colony Optimizer for TSP-solving.
 The c'tor receives the following arguments:
@@ -27,7 +28,7 @@ class AntforTSP(object):
         self.rho = rho
         self.alpha = alpha
         self.beta = beta
-        self.pheromone = np.ones((n,n))
+        self.pheromone = np.ones((n, n))
         self.local_state = np.random.RandomState(seed)
         """
         This method invokes the ACO search over the TSP graph.
@@ -45,13 +46,15 @@ class AntforTSP(object):
             all_paths = self.constructColonyPaths()
             self.depositPheronomes(all_paths)
             shortest_path = min(all_paths, key=lambda x: x[1])
-            # print(i + 1, ": ", (shortest_path[1]-self.N))
             if shortest_path[1] < best_path[1]:
                 best_path = shortest_path
             self.pheromone * self.rho  # evaporation
             if shortest_path[1] == self.N:
-                iter_found = i+1
+                iter_found = i + 1
                 break
+            if (i + 1) % 1000 == 0:
+                print(i + 1, ": ", shortest_path[0], (shortest_path[1] - self.N))
+
         final_board = [['.' for i in range(self.N)] for j in range(self.N)]
         for col in range(len(best_path[0])):
             final_board[best_path[0][col]][col] = 'x'
@@ -62,20 +65,19 @@ class AntforTSP(object):
             print()
         return best_path
 
-        """
-        This method deposits pheromones on the edges.
-        Importantly, unlike the lecture's version, this ACO selects only 1/4 of the top tours - and updates only their edges, 
-        in a slightly different manner than presented in the lecture.
-        """
+    """
+    This method deposits pheromones on the edges.
+    Importantly, unlike the lecture's version, this ACO selects only 1/4 of the top tours - and updates only their edges, 
+    in a slightly different manner than presented in the lecture.
+    """
 
     def depositPheronomes(self, all_paths):
         all_paths.sort(key=lambda x: x[1])
-        for path in all_paths[:self.Nant//4]:
+        for path in all_paths[:self.Nant // 4]:
             path_threats = path[1]
             for column in range(len(path[0])):
                 row = path[0][column]
-                self.pheromone[row][column] += (1/path_threats)
-
+                self.pheromone[row][column] += (1 / path_threats)
 
         """
         This method generates paths for the entire colony for a concrete iteration.
@@ -89,27 +91,26 @@ class AntforTSP(object):
             row = path[column]
             res += threats[row][column]
         return res
-        #
 
 
     def updatedThreats(self, row, column, threats):
-        for j in range(1,self.N - column):
-            threats[row][column + j] += 1 # update row
-            if row + j < self.N :                 # update lower diagonal
+        for j in range(1, self.N - column):
+            threats[row][column + j] += 1  # update row
+            if row + j < self.N:  # update lower diagonal
                 threats[row + j][column + j] += 1
-            if row - j >= 0:                 # update upper diagonal
+            if row - j >= 0:  # update upper diagonal
                 threats[row - j][column + j] += 1
 
         """
         This method generates a single Hamiltonian tour per an ant, starting from node 'start'
         The output, 'path', is a list of edges, each represented by a pair of nodes.
         """
+
     def constructSolution(self):
         path = []
         visited = []
         threats = np.ones((self.N, self.N))
         for i in range(self.N):
-
             index_in_column = self.nextMove(self.pheromone[:][i], threats[:][i], visited)
             visited.append(index_in_column)
             self.updatedThreats(index_in_column, i, threats)
@@ -123,7 +124,7 @@ class AntforTSP(object):
     def constructColonyPaths(self):
         all_path = []
         for ant in range(self.Nant):
-            (path, threats)= self.constructSolution()
+            (path, threats) = self.constructSolution()
             all_path.append((path, self.evalTour(path, threats)))
         return all_path
 
@@ -145,8 +146,9 @@ class AntforTSP(object):
         move = self.local_state.choice(range(self.N), 1, p=norm_colomn_prob)[0]
         return move
 
+
 def main():
-    n = 32
+    n = 10
     Nant = 200
     Niter = 10 ** 5
     rho = 0.85
@@ -154,8 +156,10 @@ def main():
 
     print(f"----------------------n={n},   Nant={Nant},   max iter={Niter},   rho={rho}----------------------")
     for i in range(tries):
-        print(f"------Try number {i+1}------")
+        print(f"------Try number {i + 1}------")
         aco = AntforTSP(n, Nant, Niter, rho, alpha=1, beta=1.5)
         print(aco.run())
         print()
+
+
 main()
