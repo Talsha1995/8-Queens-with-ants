@@ -6,7 +6,6 @@ Updated on Tue Jan 7 20:30:01 2020
 Based on code by <github/Akavall>
 """
 import numpy as np
-from HelperMethods import getDistanceMatrix
 """
 A class for defining an Ant Colony Optimizer for TSP-solving.
 The c'tor receives the following arguments:
@@ -41,17 +40,26 @@ class AntforTSP(object):
         # Book-keeping: best tour ever
         shortest_path = None
         best_path = ("TBD", np.inf)
+        iter_found = np.inf
         for i in range(self.Niter):
             all_paths = self.constructColonyPaths()
-            # print(all_paths)
             self.depositPheronomes(all_paths)
             shortest_path = min(all_paths, key=lambda x: x[1])
-            print(i + 1, ": ", (shortest_path[1]-8)//2)
+            # print(i + 1, ": ", (shortest_path[1]-self.N))
             if shortest_path[1] < best_path[1]:
                 best_path = shortest_path
             self.pheromone * self.rho  # evaporation
             if shortest_path[1] == self.N:
+                iter_found = i+1
                 break
+        final_board = [['.' for i in range(self.N)] for j in range(self.N)]
+        for col in range(len(best_path[0])):
+            final_board[best_path[0][col]][col] = 'x'
+        print(f"---found after {iter_found} iterations---")
+        for i in final_board:
+            for j in i:
+                print(j, end=' ')
+            print()
         return best_path
 
         """
@@ -87,9 +95,9 @@ class AntforTSP(object):
     def updatedThreats(self, row, column, threats):
         for j in range(1,self.N - column):
             threats[row][column + j] += 1 # update row
-            if row + j < self.N :                 # update upper diagonal
+            if row + j < self.N :                 # update lower diagonal
                 threats[row + j][column + j] += 1
-            if row - j > 0 :                 # update lower diagonal
+            if row - j >= 0:                 # update upper diagonal
                 threats[row - j][column + j] += 1
 
         """
@@ -97,7 +105,6 @@ class AntforTSP(object):
         The output, 'path', is a list of edges, each represented by a pair of nodes.
         """
     def constructSolution(self):
-        # visited = [start]
         path = []
         visited = []
         threats = np.ones((self.N, self.N))
@@ -107,12 +114,6 @@ class AntforTSP(object):
             visited.append(index_in_column)
             self.updatedThreats(index_in_column, i, threats)
             path.append(index_in_column)
-        # while len(visited) < len(self.Graph[0]):
-        #     next_vertex = self.nextMove(self.pheromone[cur_vertex], self.Graph[cur_vertex], visited)
-        #     path.append((cur_vertex, next_vertex))
-        #     cur_vertex = next_vertex
-        #     visited.append(cur_vertex)
-        # path.append((cur_vertex, start))
         return path, threats
 
         """
@@ -120,7 +121,6 @@ class AntforTSP(object):
         """
 
     def constructColonyPaths(self):
-        # rand_starts = np.random.randint(0, 149, size=(150, 0))
         all_path = []
         for ant in range(self.Nant):
             (path, threats)= self.constructSolution()
@@ -141,19 +141,21 @@ class AntforTSP(object):
         pheromone[list(visited)] = 0
         colomn_prob = pheromone ** self.alpha * ((1.0 / threats) ** self.beta)
         norm_colomn_prob = colomn_prob / colomn_prob.sum()
-        # print(norm_colomn_prob)
 
         move = self.local_state.choice(range(self.N), 1, p=norm_colomn_prob)[0]
         return move
 
 def main():
-    # graph = getDistanceMatrix()
-    # for i in range(len(graph)):
-    #     graph[i][i] = np.inf
-    n = 8
-    Nant = 50
-    Niter = 10 ** 3
-    rho = 0.8
-    aco = AntforTSP(n, Nant, Niter, rho, alpha=1, beta=1)
-    print(aco.run())
+    n = 32
+    Nant = 200
+    Niter = 10 ** 5
+    rho = 0.85
+    tries = 20
+
+    print(f"----------------------n={n},   Nant={Nant},   max iter={Niter},   rho={rho}----------------------")
+    for i in range(tries):
+        print(f"------Try number {i+1}------")
+        aco = AntforTSP(n, Nant, Niter, rho, alpha=1, beta=1.5)
+        print(aco.run())
+        print()
 main()
