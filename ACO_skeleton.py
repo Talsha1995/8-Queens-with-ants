@@ -86,11 +86,11 @@ class AntforTSP(object):
 
     def updatedThreats(self, row, column, threats):
         for j in range(1,self.N - column):
-            threats[row][column + j] += 2 # update row
+            threats[row][column + j] += 1 # update row
             if row + j < self.N :                 # update upper diagonal
-                threats[row + j][column + j] += 2
-            if row - j < self.N :                 # update lower diagonal
-                threats[row - j][column + j] += 2
+                threats[row + j][column + j] += 1
+            if row - j > 0 :                 # update lower diagonal
+                threats[row - j][column + j] += 1
 
         """
         This method generates a single Hamiltonian tour per an ant, starting from node 'start'
