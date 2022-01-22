@@ -21,7 +21,7 @@ The c'tor receives the following arguments:
 
 
 class AntforTSP(object):
-    def __init__(self, n, Nant, Niter, rho, alpha=1, beta=1, seed=None):
+    def __init__(self, n, Nant, Niter, rho, alpha=1, beta=1, seed=None, percent_of_best_path_to_deposit=0.25):
         self.N = n
         self.Nant = Nant
         self.Niter = Niter
@@ -30,6 +30,7 @@ class AntforTSP(object):
         self.beta = beta
         self.pheromone = np.ones((n, n))
         self.local_state = np.random.RandomState(seed)
+        self.percent_of_best_path_to_deposit = percent_of_best_path_to_deposit
         """
         This method invokes the ACO search over the TSP graph.
         It returns the best tour located during the search.
@@ -41,7 +42,7 @@ class AntforTSP(object):
         # Book-keeping: best tour ever
         shortest_path = None
         best_path = ("TBD", np.inf)
-        iter_found = np.inf
+        iter_found = self.Niter
         for i in range(self.Niter):
             all_paths = self.constructColonyPaths()
             self.depositPheronomes(all_paths)
@@ -53,17 +54,17 @@ class AntforTSP(object):
                 iter_found = i + 1
                 break
             if (i + 1) % 1000 == 0:
-                print(i + 1, ": ", shortest_path[0], (shortest_path[1] - self.N))
+                print("best path after", i + 1, "iterations: ", best_path[0], (best_path[1] - self.N))
 
         final_board = [['.' for i in range(self.N)] for j in range(self.N)]
         for col in range(len(best_path[0])):
-            final_board[best_path[0][col]][col] = 'x'
-        print(f"---found after {iter_found} iterations---")
-        for i in final_board:
-            for j in i:
-                print(j, end=' ')
+            final_board[best_path[0][col]][col] = 'q'
+        print(f"--- found after {iter_found} iterations ---")
+        for line in final_board:
+            for square in line:
+                print(square, end=' ')
             print()
-        return best_path
+        return best_path, iter_found
 
     """
     This method deposits pheromones on the edges.
@@ -73,7 +74,7 @@ class AntforTSP(object):
 
     def depositPheronomes(self, all_paths):
         all_paths.sort(key=lambda x: x[1])
-        for path in all_paths[:self.Nant // 4]:
+        for path in all_paths[:int(self.Nant * self.percent_of_best_path_to_deposit)]:
             path_threats = path[1]
             for column in range(len(path[0])):
                 row = path[0][column]
@@ -92,7 +93,10 @@ class AntforTSP(object):
             res += threats[row][column]
         return res
 
-
+    """
+    this method update the threats matrix with given index of new queen (move of an ant).
+    the threats updating is only to the right -->, because the ant path starts at col 0 and end at col n-1.
+    """
     def updatedThreats(self, row, column, threats):
         for j in range(1, self.N - column):
             threats[row][column + j] += 1  # update row
@@ -148,18 +152,28 @@ class AntforTSP(object):
 
 
 def main():
-    n = 10
+    n = 16
     Nant = 200
     Niter = 10 ** 5
     rho = 0.85
-    tries = 20
+    tries = 10
+    percent_of_best_path_to_deposit = 0.3
 
-    print(f"----------------------n={n},   Nant={Nant},   max iter={Niter},   rho={rho}----------------------")
+    succes = 0
+    avg_iter_found = 0
+    print(f"\n---------------------- START RUNNING: n={n},   Nant={Nant},   max iter={Niter},   rho={rho} ----------------------")
     for i in range(tries):
-        print(f"------Try number {i + 1}------")
-        aco = AntforTSP(n, Nant, Niter, rho, alpha=1, beta=1.5)
-        print(aco.run())
-        print()
+        print(f"------ Try number {i + 1} ------")
+        aco = AntforTSP(n, Nant, Niter, rho, alpha=1, beta=1,
+                        percent_of_best_path_to_deposit=percent_of_best_path_to_deposit)
+        ((path, f), iter_found) = aco.run()
+        print(path, f, '\n')
+        if f == n:
+            succes += 1
+            avg_iter_found += iter_found
+    print(f"---------------------- tries={tries},   success={succes},   avg. iter found path={avg_iter_found/succes}")
+    print(f"---------------------- FINISH RUNNING: n={n},   Nant={Nant},   max iter={Niter},   rho={rho} ----------------------")
+
 
 
 main()
