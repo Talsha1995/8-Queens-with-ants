@@ -86,7 +86,7 @@ class PheromonesData:
         for edge, phero in self.edge_to_phero.items():
             if source_row_index is not None:
                 if edge.source.row == source_row_index and edge.source.col == source_col_index:
-                    edge_p = phero ** self.alpha + (1/threats[edge.dest.row][edge.dest.col]) ** self.beta
+                    edge_p = phero ** self.alpha * (1/threats[edge.dest.row][edge.dest.col]) ** self.beta
                     edges[edge] = edge_p
                     sum_of_phero += edge_p
 
