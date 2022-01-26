@@ -8,8 +8,9 @@ from running_sets import DEBUG
 
 
 class NQueensACO:
-    def __init__(self, n, Nant, Niter, rho, init_pheromone, max_pheromone, seed=None, alpha=1, beta=1.5
+    def __init__(self, n, Nant, Niter, rho, init_pheromone, max_pheromone, seed=None, alpha=1, beta=0
                  ):
+        # todo: check with beta <= alpha  &  check beta = 0
         self.n = n
         self.Nant = Nant
         self.Niter = Niter
@@ -27,9 +28,13 @@ class NQueensACO:
         """
 
         perfect_paths = []
-        for _ in tqdm(range(self.Niter)):
+        for i in tqdm(range(self.Niter)):
+            # todo: check state after 1000 iterations
+            if i >= 500:
+                print("HERE")
             all_paths = self.constructColonyPaths()
             non_penalty_paths = self.pheromones.update_pheromones_and_get_results(all_paths)
+            # todo: add paths to perfect_paths even if not perfect
             for path in non_penalty_paths:
                 if path not in perfect_paths:
                     perfect_paths.append(path)
@@ -46,7 +51,7 @@ class NQueensACO:
         The output, 'path', is a list of edges, each represented by a pair of nodes.
         """
         path = []
-        threats = np.ones((self.n, self.n))
+        threats = 1 # np.ones((self.n, self.n))
         prev_row = None
         if DEBUG:
             print("---------------------------------------")
@@ -64,17 +69,17 @@ class NQueensACO:
         """
         return [self.constructSolution() for _ in range(self.Nant)]
 
-    def updatedThreats(self, row, column, threats):
-        """
-        this method update threats on board (on the next columns -->.. ) that the new queen, that placed in (row, col)
-        is threat on.
-        """
-        for j in range(1, self.n - column):
-            threats[row][column + j] += 1  # update row
-            if row + j < self.n:  # update upper diagonal
-                threats[row + j][column + j] += 1
-            if row - j < self.n and row - j >= 0:  # update lower diagonal
-                threats[row - j][column + j] += 1
+    # def updatedThreats(self, row, column, threats):
+    #     """
+    #     this method update threats on board (on the next columns -->.. ) that the new queen, that placed in (row, col)
+    #     is threat on.
+    #     """
+    #     for j in range(1, self.n - column):
+    #         threats[row][column + j] += 1  # update row
+    #         if row + j < self.n:  # update upper diagonal
+    #             threats[row + j][column + j] += 1
+    #         if row - j < self.n and row - j >= 0:  # update lower diagonal
+    #             threats[row - j][column + j] += 1
 
     def nextMove(self, source_row_index, source_col_index, threats) -> Edge:
         """
@@ -98,9 +103,9 @@ class NQueensACO:
         # print(probabilities)
         # print()
         move = self.local_state.choice(edges, 1, p=probabilities)[0]
-        if source_col_index == 0: #case of fisrt move so we need to update threate of 2 queens
-            self.updatedThreats(move.source.row, 0, threats)
-        self.updatedThreats(move.dest.row, move.dest.col, threats)
+        # if source_col_index == 0: #case of fisrt move so we need to update threate of 2 queens
+        #     self.updatedThreats(move.source.row, 0, threats)
+        # self.updatedThreats(move.dest.row, move.dest.col, threats)
         if DEBUG:
             print(f"chosen: {move}")
         return move

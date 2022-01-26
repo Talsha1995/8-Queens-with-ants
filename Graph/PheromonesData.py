@@ -18,15 +18,27 @@ class PheromonesData:
         :return: paths that made no penalties
         """
         perfect_paths = []
-        path_score_tuples = self.__get_path_to_score_list(lst_of_paths)
-        path_score_tuples = sorted(path_score_tuples, key=lambda x: x[1], reverse=True)
-        best_size = len(path_score_tuples)//4
-        for path, score in path_score_tuples[:best_size]:
-            for edge in path:
-                self.edge_to_phero[edge] = min(self.edge_to_phero[edge] + 1/2-1/(score**2), self.max_phero)
-            if score == self.n - 1:
+        # path_score_tuples = self.__get_path_to_score_list(lst_of_paths)
+        # path_score_tuples = sorted(path_score_tuples, key=lambda x: x[1], reverse=True)
+        # best_size = len(path_score_tuples)//4
+
+        best_len = 0
+        best_paths = []
+        for path in lst_of_paths:
+            vertices, threats = self.__count_threats(path)
+            if threats == 0:
                 perfect_paths.append(path)
-        return perfect_paths
+                continue
+            # else:
+            #     if len(path) == best_len:
+            #         best_paths.append(path)
+            #     elif len(path) > best_len:
+            #         best_paths = [path]
+            #         best_len = len(path)
+            for edge in path:
+                # todo: check adding (n-threats_in_path) to pheromones
+                self.edge_to_phero[edge] = self.edge_to_phero[edge] + (self.n - threats//2)/100
+        return perfect_paths if perfect_paths else best_paths
 
     def __get_path_to_score_list(self, lst_of_paths):
         for i in range(len(lst_of_paths)):
@@ -83,16 +95,21 @@ class PheromonesData:
             print("@@@")
         sum_of_phero = 0
         edges = dict()
+        all_same = True
         for edge, phero in self.edge_to_phero.items():
+            if phero != 0.1:
+                all_same = False
             if source_row_index is not None:
                 if edge.source.row == source_row_index and edge.source.col == source_col_index:
-                    edge_p = phero ** self.alpha * (1/threats[edge.dest.row][edge.dest.col]) ** self.beta
+                    edge_p = phero ** self.alpha  # * (1/threats[edge.dest.row][edge.dest.col]) ** self.beta
                     edges[edge] = edge_p
                     sum_of_phero += edge_p
 
             elif edge.source.col == source_col_index:
                 edges[edge] = phero
                 sum_of_phero += phero
+        if all_same:
+            print("@@@@")
         # for edge, p in edges.items():
         #     print(f"@ {edge}: {p}")
         # print(sum_of_phero)
@@ -109,4 +126,4 @@ class PheromonesData:
         """ evaporating """
         min_phero = self.init_phero
         for edge, phero in self.edge_to_phero.items():
-            self.edge_to_phero[edge] = max(self.edge_to_phero[edge]*rho, min_phero)
+            self.edge_to_phero[edge] = max(self.edge_to_phero[edge]*rho, 0.1)
